@@ -47,7 +47,7 @@ const FAQS = [
   },
   {
     q: 'What are RBA and ALC categories?',
-    a: 'These are J&K-specific reservation categories. RBA stands for Residents of Backward Areas and ALC stands for Adjacent Locality Candidates. They are only applicable in JKSSB and JKPSC exams.',
+    a: 'These are J&K-specific reservation categories. RBA stands for Residents of Backward Areas and ALC is for people who live along the Line of Control. They are only applicable in JKSSB and JKPSC exams.',
   },
   {
     q: 'Which exams are supported?',
