@@ -86,7 +86,7 @@ export default function Navbar() {
                 href="https://t.me/JKExamSpark_Official"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-sm"
+                className="btn btn-sm hide-on-mobile"
                 style={{
                   background: 'linear-gradient(135deg, #229ED9, #1a7db5)',
                   color: '#fff', border: 'none', gap: '6px', display: 'flex',
@@ -158,8 +158,8 @@ export default function Navbar() {
                 </div>
               ) : (
                 <>
-                  <Link href="/auth" className="btn btn-ghost btn-sm">Log In</Link>
-                  <Link href="/auth?tab=signup" className="btn btn-primary btn-sm">Sign Up</Link>
+                  <Link href="/auth" className="btn btn-ghost btn-sm hide-on-mobile">Log In</Link>
+                  <Link href="/auth?tab=signup" className="btn btn-primary btn-sm hide-on-mobile">Sign Up</Link>
                 </>
               )}
 

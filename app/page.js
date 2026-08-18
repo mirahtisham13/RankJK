@@ -157,7 +157,7 @@ export default function HomePage() {
             <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '36px', fontSize: '0.95rem' }}>
               Three simple steps — done in under a minute
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+            <div className="grid-3">
               {HOW_IT_WORKS.map((item, i) => (
                 <div key={i} style={{
                   background: 'var(--bg-card)', border: '1px solid var(--border)',

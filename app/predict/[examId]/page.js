@@ -257,7 +257,7 @@ export default function PredictPage() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '24px', alignItems: 'start' }}>
+          <div className="predict-grid" style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '24px', alignItems: 'start' }}>
 
             {/* Sidebar */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -379,7 +379,7 @@ export default function PredictPage() {
                   </div>
 
                   {/* Additional stats */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginTop: '20px' }}>
+                  <div className="grid-4" style={{ gap: '12px', marginTop: '20px' }}>
                     {[
                       { label: 'Highest Score', value: categoryStats.max_score },
                       { label: 'Lowest Score', value: categoryStats.min_score },
