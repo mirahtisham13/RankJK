@@ -109,63 +109,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* ── Stats strip ── */}
-          <div style={{
-            display: 'flex', marginBottom: '64px',
-            background: 'var(--bg-card)', border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-lg)', overflow: 'hidden',
-          }}>
-            {[
-              { value: stats.totalExams || '—', label: 'Active Exams', icon: '📋' },
-              { value: stats.totalSubmissions > 0 ? stats.totalSubmissions.toLocaleString() : '—', label: 'Marks Submitted', icon: '📊' },
-              { value: '8', label: 'Categories', icon: '🏷️' },
-              { value: '100%', label: 'Free', icon: '✅' },
-            ].map((item, i) => (
-              <div key={i} style={{
-                flex: 1, textAlign: 'center', padding: '20px 8px',
-                borderRight: i < 3 ? '1px solid var(--border)' : 'none',
-              }}>
-                <div style={{ fontSize: '1.1rem', marginBottom: '4px' }}>{item.icon}</div>
-                <div style={{
-                  fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.5rem',
-                  background: 'var(--brand-gradient)', WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1.1,
-                }}>{item.value}</div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>{item.label}</div>
-              </div>
-            ))}
-          </div>
 
-          {/* ── How it works ── */}
-          <div style={{ marginBottom: '72px' }}>
-            <h2 style={{ textAlign: 'center', fontSize: '1.6rem', marginBottom: '8px' }}>How It Works</h2>
-            <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '36px', fontSize: '0.95rem' }}>
-              Three simple steps — done in under a minute
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-              {HOW_IT_WORKS.map((item, i) => (
-                <div key={i} style={{
-                  background: 'var(--bg-card)', border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-lg)', padding: '28px 24px', position: 'relative',
-                }}>
-                  {/* Step number watermark */}
-                  <div style={{
-                    position: 'absolute', top: '16px', right: '20px',
-                    fontFamily: 'var(--font-display)', fontSize: '3.5rem', fontWeight: 900,
-                    color: 'rgba(59,130,246,0.08)', lineHeight: 1, userSelect: 'none',
-                  }}>0{i + 1}</div>
-                  <div style={{
-                    width: '52px', height: '52px', borderRadius: 'var(--radius-md)',
-                    background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '1.5rem', marginBottom: '18px',
-                  }}>{item.icon}</div>
-                  <h3 style={{ fontSize: '1rem', marginBottom: '8px' }}>{item.title}</h3>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
 
           {/* ── Exams ── */}
           <div style={{ marginBottom: '72px' }}>
@@ -205,6 +149,37 @@ export default function HomePage() {
                 {filtered.map(exam => <ExamCard key={exam.id} exam={exam} />)}
               </div>
             )}
+          </div>
+
+          {/* ── How it works ── */}
+          <div style={{ marginBottom: '72px' }}>
+            <h2 style={{ textAlign: 'center', fontSize: '1.6rem', marginBottom: '8px' }}>How It Works</h2>
+            <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '36px', fontSize: '0.95rem' }}>
+              Three simple steps — done in under a minute
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+              {HOW_IT_WORKS.map((item, i) => (
+                <div key={i} style={{
+                  background: 'var(--bg-card)', border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-lg)', padding: '28px 24px', position: 'relative',
+                }}>
+                  {/* Step number watermark */}
+                  <div style={{
+                    position: 'absolute', top: '16px', right: '20px',
+                    fontFamily: 'var(--font-display)', fontSize: '3.5rem', fontWeight: 900,
+                    color: 'rgba(59,130,246,0.08)', lineHeight: 1, userSelect: 'none',
+                  }}>0{i + 1}</div>
+                  <div style={{
+                    width: '52px', height: '52px', borderRadius: 'var(--radius-md)',
+                    background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '1.5rem', marginBottom: '18px',
+                  }}>{item.icon}</div>
+                  <h3 style={{ fontSize: '1rem', marginBottom: '8px' }}>{item.title}</h3>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>{item.desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* ── FAQs ── */}
