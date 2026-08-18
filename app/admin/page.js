@@ -14,6 +14,7 @@ export default function AdminPage() {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('exams');
 
   // Exams tab state
@@ -41,11 +42,25 @@ export default function AdminPage() {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session?.user) { router.push('/auth'); return; }
       setUser(session.user);
-      const p = await getProfile(session.user.id);
-      if (!p?.is_admin) { router.push('/'); return; }
-      setProfile(p);
-      loadExams();
-      setLoading(false);
+      try {
+        const p = await getProfile(session.user.id);
+        if (!p) {
+          setError('Your profile was not found. Make sure you have run the Supabase schema SQL first.');
+          setLoading(false);
+          return;
+        }
+        if (!p.is_admin) {
+          setError('You do not have admin access. Ask the site owner to run:\n\nUPDATE profiles SET is_admin = TRUE WHERE id = \'' + session.user.id + '\';');
+          setLoading(false);
+          return;
+        }
+        setProfile(p);
+        loadExams();
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to load admin panel: ' + err.message + '\n\nMake sure you have run the Supabase schema SQL from supabase/schema.sql');
+        setLoading(false);
+      }
     });
   }, [router]);
 
@@ -197,6 +212,44 @@ export default function AdminPage() {
           <div className="container">
             <div className="skeleton skeleton-title" style={{ marginBottom: '24px' }} />
             <div className="skeleton skeleton-card" />
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <Navbar />
+        <main className="page-wrapper">
+          <div className="container" style={{ maxWidth: '640px' }}>
+            <div style={{ textAlign: 'center', padding: '60px 0 32px' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔒</div>
+              <h2 style={{ marginBottom: '16px' }}>Admin Access Required</h2>
+            </div>
+            <div className="alert alert-error" style={{ marginBottom: '24px', whiteSpace: 'pre-wrap', fontSize: '0.875rem' }}>
+              {error}
+            </div>
+            <div className="card" style={{ padding: '24px' }}>
+              <h3 style={{ fontSize: '1rem', marginBottom: '12px' }}>How to fix</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '16px' }}>
+                <strong>Step 1:</strong> Make sure you have run <code style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>supabase/schema.sql</code> in your Supabase SQL Editor.
+              </p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '16px' }}>
+                <strong>Step 2:</strong> Run this in Supabase → SQL Editor to grant yourself admin access:
+              </p>
+              <pre style={{
+                background: 'var(--bg-base)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
+                padding: '16px', fontSize: '0.82rem', color: '#4ade80', overflowX: 'auto'
+              }}>
+{`UPDATE profiles SET is_admin = TRUE
+WHERE id = (
+  SELECT id FROM auth.users
+  WHERE email = 'your@email.com'
+);`}
+              </pre>
+            </div>
           </div>
         </main>
       </>
