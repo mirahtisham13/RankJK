@@ -114,7 +114,7 @@ export default function HomePage() {
           {/* ── Exams ── */}
           <div style={{ marginBottom: '72px' }}>
             <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
               marginBottom: '20px', gap: '12px', flexWrap: 'wrap',
             }}>
               <div>

@@ -272,9 +272,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-sm {
-  padding: 6px 14px;
+  padding: 8px 16px;
   font-size: 0.8rem;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
 }
 
 .btn-icon {
@@ -422,7 +422,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .navbar-nav a {
-  padding: 6px 14px;
+  padding: 8px 16px;
   border-radius: var(--radius-md);
   font-size: 0.9rem;
   font-weight: 500;
