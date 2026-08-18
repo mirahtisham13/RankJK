@@ -19,14 +19,9 @@ export default function AdminPage() {
 
   // Exams tab state
   const [exams, setExams] = useState([]);
-  const [selectedExam, setSelectedExam] = useState(null);
-  const [examPosts, setExamPosts] = useState([]);
   const [showExamForm, setShowExamForm] = useState(false);
-  const [showPostForm, setShowPostForm] = useState(false);
-  const [examForm, setExamForm] = useState({ name: '', short_name: '', description: '', conducting_body: 'JKSSB', total_vacancies: '' });
-  const [postForm, setPostForm] = useState({ name: '', total_marks: 100, vacancies: '' });
+  const [examForm, setExamForm] = useState({ name: '', short_name: '', description: '', conducting_body: 'JKSSB', total_marks: 100, total_vacancies: '' });
   const [examSaving, setExamSaving] = useState(false);
-  const [postSaving, setPostSaving] = useState(false);
 
   // Submissions tab state
   const [submissions, setSubmissions] = useState([]);
@@ -67,15 +62,6 @@ export default function AdminPage() {
   async function loadExams() {
     const data = await getExams({ activeOnly: false });
     setExams(data || []);
-    if (data?.[0] && !selectedExam) {
-      setSelectedExam(data[0]);
-      loadPostsForExam(data[0].id);
-    }
-  }
-
-  async function loadPostsForExam(examId) {
-    const data = await getPostsByExam(examId);
-    setExamPosts(data || []);
   }
 
   async function loadSubmissions() {
@@ -107,14 +93,26 @@ export default function AdminPage() {
     e.preventDefault();
     setExamSaving(true);
     try {
+      // Create exam
       const exam = await createExam({
-        ...examForm,
+        name: examForm.name,
+        short_name: examForm.short_name,
+        description: examForm.description,
+        conducting_body: examForm.conducting_body,
         total_vacancies: examForm.total_vacancies ? parseInt(examForm.total_vacancies) : null,
+        is_active: true,
+      });
+      // Auto-create a single post with same name
+      await createPost({
+        exam_id: exam.id,
+        name: examForm.short_name,
+        total_marks: parseInt(examForm.total_marks),
+        vacancies: examForm.total_vacancies ? parseInt(examForm.total_vacancies) : null,
         is_active: true,
       });
       setExams(prev => [exam, ...prev]);
       setShowExamForm(false);
-      setExamForm({ name: '', short_name: '', description: '', conducting_body: 'JKSSB', total_vacancies: '' });
+      setExamForm({ name: '', short_name: '', description: '', conducting_body: 'JKSSB', total_marks: 100, total_vacancies: '' });
       showMsg('✅ Exam created successfully!');
     } catch (err) {
       showMsg('❌ Error: ' + err.message);
@@ -124,11 +122,10 @@ export default function AdminPage() {
   }
 
   async function handleDeleteExam(id) {
-    if (!confirm('Delete this exam and ALL its posts and submissions? This cannot be undone.')) return;
+    if (!confirm('Delete this exam and all its submissions? This cannot be undone.')) return;
     try {
       await deleteExam(id);
       setExams(prev => prev.filter(e => e.id !== id));
-      if (selectedExam?.id === id) { setSelectedExam(null); setExamPosts([]); }
       showMsg('✅ Exam deleted.');
     } catch (err) {
       showMsg('❌ Error: ' + err.message);
@@ -145,40 +142,6 @@ export default function AdminPage() {
     }
   }
 
-  // ---- Post Actions ----
-  async function handleCreatePost(e) {
-    e.preventDefault();
-    if (!selectedExam) return;
-    setPostSaving(true);
-    try {
-      const post = await createPost({
-        exam_id: selectedExam.id,
-        name: postForm.name,
-        total_marks: parseInt(postForm.total_marks),
-        vacancies: postForm.vacancies ? parseInt(postForm.vacancies) : null,
-        is_active: true,
-      });
-      setExamPosts(prev => [...prev, post]);
-      setShowPostForm(false);
-      setPostForm({ name: '', total_marks: 100, vacancies: '' });
-      showMsg('✅ Post created!');
-    } catch (err) {
-      showMsg('❌ Error: ' + err.message);
-    } finally {
-      setPostSaving(false);
-    }
-  }
-
-  async function handleDeletePost(id) {
-    if (!confirm('Delete this post? All submissions for it will also be deleted.')) return;
-    try {
-      await deletePost(id);
-      setExamPosts(prev => prev.filter(p => p.id !== id));
-      showMsg('✅ Post deleted.');
-    } catch (err) {
-      showMsg('❌ Error: ' + err.message);
-    }
-  }
 
   // ---- Submission Actions ----
   async function handleDeleteSubmission(id) {
@@ -296,185 +259,105 @@ WHERE id = (
 
           {/* ======== EXAMS TAB ======== */}
           {activeTab === 'exams' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '24px', alignItems: 'start' }}>
-
-              {/* Exam List */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>EXAMS ({exams.length})</h3>
-                  <button className="btn btn-primary btn-sm" onClick={() => setShowExamForm(v => !v)}>
-                    {showExamForm ? 'Cancel' : '+ New Exam'}
-                  </button>
-                </div>
-
-                {/* Create Exam Form */}
-                {showExamForm && (
-                  <div className="card" style={{ marginBottom: '16px', padding: '20px' }}>
-                    <h4 style={{ marginBottom: '16px', fontSize: '0.95rem' }}>New Exam</h4>
-                    <form onSubmit={handleCreateExam} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      <div className="form-group">
-                        <label className="form-label">Exam Name *</label>
-                        <input className="form-input" value={examForm.name} onChange={e => setExamForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. JKSSB Finance Dept Exam 2025" required />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Short Name *</label>
-                        <input className="form-input" value={examForm.short_name} onChange={e => setExamForm(f => ({ ...f, short_name: e.target.value }))} placeholder="e.g. JKSSB Finance" required />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Conducting Body *</label>
-                        <select className="form-input form-select" value={examForm.conducting_body} onChange={e => setExamForm(f => ({ ...f, conducting_body: e.target.value }))}>
-                          {CONDUCTING_BODIES.map(b => <option key={b} value={b}>{b}</option>)}
-                        </select>
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Description</label>
-                        <textarea className="form-input" value={examForm.description} onChange={e => setExamForm(f => ({ ...f, description: e.target.value }))} rows={2} placeholder="Brief description..." />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Total Vacancies</label>
-                        <input type="number" className="form-input" value={examForm.total_vacancies} onChange={e => setExamForm(f => ({ ...f, total_vacancies: e.target.value }))} placeholder="e.g. 500" />
-                      </div>
-                      <button type="submit" className="btn btn-primary" disabled={examSaving}>
-                        {examSaving ? <span className="spinner" /> : '✓ Create Exam'}
-                      </button>
-                    </form>
-                  </div>
-                )}
-
-                {/* Exam Items */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {exams.map(exam => (
-                    <div
-                      key={exam.id}
-                      style={{
-                        padding: '12px 14px', borderRadius: 'var(--radius-md)',
-                        border: '1px solid', cursor: 'pointer',
-                        borderColor: selectedExam?.id === exam.id ? 'var(--brand-blue)' : 'var(--border)',
-                        background: selectedExam?.id === exam.id ? 'rgba(59,130,246,0.08)' : 'var(--bg-card)',
-                        transition: 'all 0.2s'
-                      }}
-                      onClick={() => { setSelectedExam(exam); loadPostsForExam(exam.id); }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div>
-                          <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{exam.short_name}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                            {exam.conducting_body}
-                            {!exam.is_active && <span style={{ color: 'var(--danger)', marginLeft: '6px' }}>● Hidden</span>}
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: '6px' }} onClick={e => e.stopPropagation()}>
-                          <button
-                            className="btn btn-sm"
-                            style={{
-                              background: exam.is_active ? 'rgba(245,158,11,0.1)' : 'rgba(34,197,94,0.1)',
-                              color: exam.is_active ? 'var(--warning)' : 'var(--success)',
-                              border: `1px solid ${exam.is_active ? 'rgba(245,158,11,0.3)' : 'rgba(34,197,94,0.3)'}`,
-                              padding: '4px 8px', fontSize: '0.7rem'
-                            }}
-                            onClick={() => handleToggleExamActive(exam)}
-                          >
-                            {exam.is_active ? 'Hide' : 'Show'}
-                          </button>
-                          <button
-                            className="btn btn-sm btn-danger"
-                            style={{ padding: '4px 8px', fontSize: '0.7rem' }}
-                            onClick={() => handleDeleteExam(exam.id)}
-                          >
-                            Del
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3>{exams.length} exams</h3>
+                <button className="btn btn-primary btn-sm" onClick={() => setShowExamForm(v => !v)}>
+                  {showExamForm ? 'Cancel' : '+ New Exam'}
+                </button>
               </div>
 
-              {/* Posts panel */}
-              <div>
-                {selectedExam ? (
-                  <>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                      <div>
-                        <h3 style={{ fontSize: '1rem' }}>{selectedExam.name}</h3>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginTop: '4px' }}>
-                          {selectedExam.description}
-                        </p>
-                      </div>
-                      <button className="btn btn-secondary btn-sm" onClick={() => setShowPostForm(v => !v)}>
-                        {showPostForm ? 'Cancel' : '+ Add Post'}
-                      </button>
+              {/* Create Exam Form */}
+              {showExamForm && (
+                <div className="card" style={{ marginBottom: '24px', padding: '24px' }}>
+                  <h4 style={{ marginBottom: '18px', fontSize: '1rem' }}>Add New Exam</h4>
+                  <form onSubmit={handleCreateExam} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                      <label className="form-label">Full Exam Name *</label>
+                      <input className="form-input" value={examForm.name} onChange={e => setExamForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. JKSSB Finance Dept Junior Assistant 2025" required />
                     </div>
+                    <div className="form-group">
+                      <label className="form-label">Short Name *</label>
+                      <input className="form-input" value={examForm.short_name} onChange={e => setExamForm(f => ({ ...f, short_name: e.target.value }))} placeholder="e.g. JKSSB Jr. Assistant" required />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Conducting Body *</label>
+                      <select className="form-input form-select" value={examForm.conducting_body} onChange={e => setExamForm(f => ({ ...f, conducting_body: e.target.value }))}>
+                        {CONDUCTING_BODIES.map(b => <option key={b} value={b}>{b}</option>)}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Total Marks *</label>
+                      <input type="number" className="form-input" value={examForm.total_marks} onChange={e => setExamForm(f => ({ ...f, total_marks: e.target.value }))} required />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Total Vacancies</label>
+                      <input type="number" className="form-input" value={examForm.total_vacancies} onChange={e => setExamForm(f => ({ ...f, total_vacancies: e.target.value }))} placeholder="optional" />
+                    </div>
+                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                      <label className="form-label">Description</label>
+                      <input className="form-input" value={examForm.description} onChange={e => setExamForm(f => ({ ...f, description: e.target.value }))} placeholder="Brief description (optional)" />
+                    </div>
+                    <button type="submit" className="btn btn-primary" style={{ gridColumn: 'span 2' }} disabled={examSaving}>
+                      {examSaving ? <span className="spinner" /> : '✓ Create Exam'}
+                    </button>
+                  </form>
+                </div>
+              )}
 
-                    {showPostForm && (
-                      <div className="card" style={{ marginBottom: '20px', padding: '20px' }}>
-                        <h4 style={{ marginBottom: '14px', fontSize: '0.95rem' }}>New Post for {selectedExam.short_name}</h4>
-                        <form onSubmit={handleCreatePost} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
-                          <div className="form-group" style={{ gridColumn: 'span 3' }}>
-                            <label className="form-label">Post Name *</label>
-                            <input className="form-input" value={postForm.name} onChange={e => setPostForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Accounts Assistant" required />
-                          </div>
-                          <div className="form-group">
-                            <label className="form-label">Total Marks *</label>
-                            <input type="number" className="form-input" value={postForm.total_marks} onChange={e => setPostForm(f => ({ ...f, total_marks: e.target.value }))} required />
-                          </div>
-                          <div className="form-group">
-                            <label className="form-label">Vacancies</label>
-                            <input type="number" className="form-input" value={postForm.vacancies} onChange={e => setPostForm(f => ({ ...f, vacancies: e.target.value }))} placeholder="optional" />
-                          </div>
-                          <button type="submit" className="btn btn-primary" style={{ alignSelf: 'flex-end' }} disabled={postSaving}>
-                            {postSaving ? <span className="spinner" /> : '✓ Add'}
-                          </button>
-                        </form>
-                      </div>
-                    )}
-
-                    {examPosts.length === 0 ? (
-                      <div className="empty-state" style={{ padding: '40px' }}>
-                        <div className="empty-icon">📭</div>
-                        <h3>No posts yet</h3>
-                        <p>Add posts to this exam.</p>
-                      </div>
-                    ) : (
-                      <div className="table-wrapper">
-                        <table>
-                          <thead>
-                            <tr>
-                              <th>Post Name</th>
-                              <th>Total Marks</th>
-                              <th>Vacancies</th>
-                              <th>Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {examPosts.map(post => (
-                              <tr key={post.id}>
-                                <td style={{ fontWeight: 600 }}>{post.name}</td>
-                                <td>{post.total_marks}</td>
-                                <td>{post.vacancies || '—'}</td>
-                                <td>
-                                  <button
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() => handleDeletePost(post.id)}
-                                  >
-                                    Delete
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="empty-state">
-                    <div className="empty-icon">👈</div>
-                    <h3>Select an exam</h3>
-                    <p>Click on an exam to manage its posts.</p>
-                  </div>
-                )}
-              </div>
+              {/* Exams Table */}
+              {exams.length === 0 ? (
+                <div className="empty-state"><div className="empty-icon">📋</div><h3>No exams yet</h3><p>Add your first exam above.</p></div>
+              ) : (
+                <div className="table-wrapper">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Exam</th>
+                        <th>Body</th>
+                        <th>Vacancies</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {exams.map(exam => (
+                        <tr key={exam.id}>
+                          <td>
+                            <div style={{ fontWeight: 600 }}>{exam.short_name}</div>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>{exam.name}</div>
+                          </td>
+                          <td><span className="badge badge-blue" style={{ fontSize: '0.72rem' }}>{exam.conducting_body}</span></td>
+                          <td style={{ color: 'var(--text-muted)' }}>{exam.total_vacancies || '—'}</td>
+                          <td>
+                            <span className={`badge ${exam.is_active ? 'badge-green' : 'badge-gray'}`} style={{ fontSize: '0.72rem' }}>
+                              {exam.is_active ? 'Active' : 'Hidden'}
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <button
+                                className="btn btn-sm"
+                                style={{
+                                  background: exam.is_active ? 'rgba(245,158,11,0.1)' : 'rgba(34,197,94,0.1)',
+                                  color: exam.is_active ? 'var(--warning)' : 'var(--success)',
+                                  border: `1px solid ${exam.is_active ? 'rgba(245,158,11,0.3)' : 'rgba(34,197,94,0.3)'}`,
+                                }}
+                                onClick={() => handleToggleExamActive(exam)}
+                              >
+                                {exam.is_active ? 'Hide' : 'Show'}
+                              </button>
+                              <button className="btn btn-sm btn-danger" onClick={() => handleDeleteExam(exam.id)}>
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
 
@@ -496,7 +379,6 @@ WHERE id = (
                       <tr>
                         <th>User</th>
                         <th>Exam</th>
-                        <th>Post</th>
                         <th>Score</th>
                         <th>Category</th>
                         <th>Date</th>
@@ -510,7 +392,7 @@ WHERE id = (
                           <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                             {sub.posts?.exams?.short_name || '—'}
                           </td>
-                          <td style={{ fontSize: '0.85rem' }}>{sub.posts?.name || '—'}</td>
+
                           <td style={{ fontWeight: 700 }}>{sub.score}</td>
                           <td><span className="badge badge-blue" style={{ fontSize: '0.7rem' }}>{sub.category}</span></td>
                           <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>

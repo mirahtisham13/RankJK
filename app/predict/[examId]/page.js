@@ -25,6 +25,123 @@ function CutoffValueCard({ label, value, isMain, color = 'var(--text-primary)' }
   );
 }
 
+function InlineSubmitForm({ exam, selectedPost, user, userScore, onSubmitted }) {
+  const [score, setScore] = useState('');
+  const [category, setCategory] = useState('General');
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+  const [showForm, setShowForm] = useState(false);
+
+  if (!user) {
+    return (
+      <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
+        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '10px' }}>
+          Login to submit your marks
+        </div>
+        <Link href="/auth" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+          Login / Sign Up
+        </Link>
+      </div>
+    );
+  }
+
+  if (success || userScore) {
+    return (
+      <div className="card" style={{ padding: '16px', textAlign: 'center', background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.2)' }}>
+        <div style={{ fontSize: '1.5rem', marginBottom: '6px' }}>✅</div>
+        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--success)' }}>Marks Submitted!</div>
+        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>Score: {userScore?.score} · {userScore?.category}</div>
+        <button
+          className="btn btn-ghost btn-sm"
+          style={{ marginTop: '10px', fontSize: '0.75rem' }}
+          onClick={() => { setSuccess(false); setShowForm(true); }}
+        >Update</button>
+      </div>
+    );
+  }
+
+  if (!showForm) {
+    return (
+      <button
+        className="btn btn-primary"
+        style={{ width: '100%', justifyContent: 'center' }}
+        onClick={() => setShowForm(true)}
+      >
+        📊 Submit My Marks
+      </button>
+    );
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!selectedPost) return;
+    const scoreNum = parseFloat(score);
+    if (isNaN(scoreNum) || scoreNum < 0 || scoreNum > selectedPost.total_marks) {
+      setError(`Score must be between 0 and ${selectedPost.total_marks}`);
+      return;
+    }
+    setSubmitting(true);
+    setError('');
+    try {
+      const { error: err } = await supabase
+        .from('submissions')
+        .upsert({
+          user_id: user.id,
+          post_id: selectedPost.id,
+          score: scoreNum,
+          category,
+        }, { onConflict: 'user_id,post_id' });
+      if (err) throw err;
+      setSuccess(true);
+      onSubmitted({ score: scoreNum, category });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="card" style={{ padding: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+        <h3 style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>SUBMIT YOUR MARKS</h3>
+        <button className="btn btn-ghost btn-sm" style={{ fontSize: '0.75rem', padding: '2px 6px' }} onClick={() => setShowForm(false)}>✕</button>
+      </div>
+      {error && <div className="alert alert-error" style={{ marginBottom: '12px', fontSize: '0.8rem' }}>{error}</div>}
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div className="form-group">
+          <label className="form-label">Your Score (out of {selectedPost?.total_marks})</label>
+          <input
+            type="number"
+            className="form-input"
+            value={score}
+            onChange={e => setScore(e.target.value)}
+            placeholder={`0 – ${selectedPost?.total_marks}`}
+            min="0"
+            max={selectedPost?.total_marks}
+            step="0.25"
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Your Category</label>
+          <select
+            className="form-input form-select"
+            value={category}
+            onChange={e => setCategory(e.target.value)}
+          >
+            {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </select>
+        </div>
+        <button type="submit" className="btn btn-primary" disabled={submitting} style={{ width: '100%', justifyContent: 'center' }}>
+          {submitting ? <span className="spinner" /> : '✓ Submit'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 export default function PredictPage() {
   const { examId } = useParams();
   const [exam, setExam] = useState(null);
@@ -137,9 +254,6 @@ export default function PredictPage() {
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>{exam.description}</p>
                 )}
               </div>
-              <Link href={`/submit?exam=${exam.id}`} className="btn btn-primary">
-                📊 Submit My Marks
-              </Link>
             </div>
           </div>
 
@@ -148,32 +262,6 @@ export default function PredictPage() {
             {/* Sidebar */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-              {/* Post Selector */}
-              <div className="card">
-                <h3 style={{ fontSize: '0.875rem', marginBottom: '12px', color: 'var(--text-secondary)' }}>SELECT POST</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {exam.posts?.map(post => (
-                    <button
-                      key={post.id}
-                      onClick={() => setSelectedPost(post)}
-                      style={{
-                        padding: '10px 14px', borderRadius: 'var(--radius-md)',
-                        border: '1px solid',
-                        borderColor: selectedPost?.id === post.id ? 'var(--brand-blue)' : 'transparent',
-                        background: selectedPost?.id === post.id ? 'rgba(59,130,246,0.1)' : 'transparent',
-                        color: selectedPost?.id === post.id ? 'var(--text-accent)' : 'var(--text-secondary)',
-                        textAlign: 'left', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500,
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      {post.name}
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                        {post.vacancies && `${post.vacancies} vacancies`} · out of {post.total_marks}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
 
               {/* Category Selector */}
               <div className="card">
@@ -204,7 +292,7 @@ export default function PredictPage() {
                 </div>
               </div>
 
-              {/* User rank if logged in */}
+              {/* User rank if logged in and already submitted */}
               {userRank && (
                 <div className="rank-badge">
                   <div style={{ fontSize: '0.75rem', opacity: 0.8, marginBottom: '8px', position: 'relative' }}>
@@ -220,13 +308,26 @@ export default function PredictPage() {
                 </div>
               )}
 
-              {/* Submit CTA if not submitted */}
-              {!userRank && (
-                <Link href={`/submit?exam=${exam.id}`} className="btn btn-secondary w-full">
-                  + Submit Your Marks
-                </Link>
-              )}
+              {/* Inline Submit Form */}
+              <InlineSubmitForm
+                exam={exam}
+                selectedPost={selectedPost}
+                user={user}
+                userScore={userScore}
+                onSubmitted={(newScore) => {
+                  setUserScore(newScore);
+                  // Refresh stats
+                  Promise.all([
+                    getSubmissionsByPost(selectedPost.id),
+                    getCutoffStats(selectedPost.id),
+                  ]).then(([subs, stats]) => {
+                    setSubmissions(subs || []);
+                    setCutoffStats(stats || []);
+                  });
+                }}
+              />
             </div>
+
 
             {/* Main content */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -305,11 +406,8 @@ export default function PredictPage() {
                   <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📭</div>
                   <h3 style={{ marginBottom: '8px' }}>No submissions yet for {selectedCategory}</h3>
                   <p style={{ color: 'var(--text-muted)', marginBottom: '20px' }}>
-                    Be the first to submit marks for this category!
+                    Be the first! Submit your marks using the form on the left.
                   </p>
-                  <Link href={`/submit?exam=${exam.id}`} className="btn btn-primary">
-                    Submit Now
-                  </Link>
                 </div>
               )}
 

@@ -43,7 +43,6 @@ export default function Navbar() {
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/exams', label: 'Exams' },
-    { href: '/submit', label: 'Submit Marks' },
     { href: '/leaderboard', label: 'Leaderboard' },
   ];
 
@@ -77,6 +76,24 @@ export default function Navbar() {
                 </li>
               )}
             </ul>
+
+            {/* Telegram */}
+            <a
+              href="https://t.me/JKExamSpark_Official"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-sm"
+              style={{
+                background: 'linear-gradient(135deg, #229ED9, #1a7db5)',
+                color: '#fff', border: 'none', gap: '6px', display: 'flex',
+                alignItems: 'center', fontSize: '0.8rem', padding: '6px 12px',
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.24 13.766l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.908.793z"/>
+              </svg>
+              Join Telegram
+            </a>
 
             {/* Actions */}
             <div className="navbar-actions">
@@ -164,6 +181,15 @@ export default function Navbar() {
         {profile?.is_admin && (
           <Link href="/admin" onClick={() => setMenuOpen(false)}>⚙️ Admin Panel</Link>
         )}
+        <a
+          href="https://t.me/JKExamSpark_Official"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => setMenuOpen(false)}
+          style={{ color: '#229ED9', fontWeight: 600 }}
+        >
+          📢 Join Telegram Group
+        </a>
         <hr className="divider" style={{ margin: '8px 0' }} />
         {user ? (
           <>

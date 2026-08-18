@@ -83,7 +83,16 @@ CREATE TABLE IF NOT EXISTS submissions (
 -- ROW LEVEL SECURITY
 -- ============================================================
 
--- Profiles: users can read their own profile, admins can read all
+-- Helper function: checks admin without querying profiles inside a profiles policy (avoids infinite recursion)
+CREATE OR REPLACE FUNCTION public.is_admin_check()
+RETURNS BOOLEAN AS $$
+  SELECT COALESCE(
+    (SELECT is_admin FROM profiles WHERE id = auth.uid()),
+    FALSE
+  )
+$$ LANGUAGE SQL SECURITY DEFINER STABLE;
+
+-- Profiles
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own profile"
@@ -96,11 +105,7 @@ CREATE POLICY "Users can update own profile"
 
 CREATE POLICY "Admins can view all profiles"
   ON profiles FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = TRUE
-    )
-  );
+  USING (public.is_admin_check());
 
 -- Exams: public read, admin write
 ALTER TABLE exams ENABLE ROW LEVEL SECURITY;
@@ -111,11 +116,7 @@ CREATE POLICY "Anyone can view active exams"
 
 CREATE POLICY "Admins can manage exams"
   ON exams FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = TRUE
-    )
-  );
+  USING (public.is_admin_check());
 
 -- Posts: public read, admin write
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
@@ -126,11 +127,7 @@ CREATE POLICY "Anyone can view active posts"
 
 CREATE POLICY "Admins can manage posts"
   ON posts FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = TRUE
-    )
-  );
+  USING (public.is_admin_check());
 
 -- Submissions: public aggregate read, authenticated write
 ALTER TABLE submissions ENABLE ROW LEVEL SECURITY;
