@@ -2,43 +2,43 @@ import Link from 'next/link';
 
 export default function Footer() {
   return (
-    <footer className="footer">
+    <footer style={{
+      borderTop: '1px solid var(--border)',
+      padding: '32px 0',
+      position: 'relative',
+      zIndex: 1
+    }}>
       <div className="container">
-        <div className="footer-grid">
-          <div className="footer-brand">
-            <h3 className="text-gradient" style={{ fontFamily: 'var(--font-display)', fontWeight: 800 }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexWrap: 'wrap', gap: '16px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
+            <span style={{
+              fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.1rem',
+              background: 'var(--brand-gradient)', WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent', backgroundClip: 'text'
+            }}>
               🎯 RankJK
-            </h3>
-            <p>
-              India&apos;s crowd-sourced cutoff predictor for competitive exams. Built for aspirants of JKSSB, SSC, JKPSC and more.
-            </p>
-            <p style={{ marginTop: '12px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              <strong style={{ color: 'var(--text-secondary)' }}>Note:</strong> Cutoffs are predicted based on community data and may differ from official results.
-            </p>
+            </span>
+            <nav style={{ display: 'flex', gap: '16px', fontSize: '0.875rem' }}>
+              <Link href="/exams" style={{ color: 'var(--text-muted)', transition: 'color 0.2s' }}
+                onMouseEnter={e => e.target.style.color = 'var(--text-primary)'}
+                onMouseLeave={e => e.target.style.color = 'var(--text-muted)'}
+              >Exams</Link>
+              <Link href="/submit" style={{ color: 'var(--text-muted)', transition: 'color 0.2s' }}
+                onMouseEnter={e => e.target.style.color = 'var(--text-primary)'}
+                onMouseLeave={e => e.target.style.color = 'var(--text-muted)'}
+              >Submit</Link>
+              <Link href="/leaderboard" style={{ color: 'var(--text-muted)', transition: 'color 0.2s' }}
+                onMouseEnter={e => e.target.style.color = 'var(--text-primary)'}
+                onMouseLeave={e => e.target.style.color = 'var(--text-muted)'}
+              >Leaderboard</Link>
+            </nav>
           </div>
-          <div className="footer-col">
-            <h4>Explore</h4>
-            <ul>
-              <li><Link href="/exams">Browse Exams</Link></li>
-              <li><Link href="/submit">Submit Marks</Link></li>
-              <li><Link href="/leaderboard">Leaderboard</Link></li>
-            </ul>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+            © {new Date().getFullYear()} RankJK · Predictions are community-based, not official.
           </div>
-          <div className="footer-col">
-            <h4>Exams</h4>
-            <ul>
-              <li><Link href="/exams?body=JKSSB">JKSSB</Link></li>
-              <li><Link href="/exams?body=SSC">SSC</Link></li>
-              <li><Link href="/exams?body=JKPSC">JKPSC</Link></li>
-              <li><Link href="/auth?tab=signup">Join Community</Link></li>
-            </ul>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <span>© {new Date().getFullYear()} RankJK. Made with ❤️ for J&K aspirants.</span>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            Data is community-contributed. Results may vary.
-          </span>
         </div>
       </div>
     </footer>
